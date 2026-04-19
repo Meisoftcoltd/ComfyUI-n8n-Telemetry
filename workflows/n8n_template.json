@@ -1,0 +1,182 @@
+{
+  "name": "ComfyUI Telemetry Alerts",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "comfyui-telemetry",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "webhook-1",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "comfyui-telemetry-webhook"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "rules": [
+            {
+              "outputKey": "inicio",
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $json.body.estado }}",
+                    "value2": "inicio"
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "fin",
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $json.body.estado }}",
+                    "value2": "fin"
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "error",
+              "conditions": {
+                "string": [
+                  {
+                    "value1": "={{ $json.body.estado }}",
+                    "value2": "error"
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "fallbackOutput": 3
+      },
+      "id": "switch-1",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "<TU_CHAT_ID>",
+        "text": "=🚀 **INICIO:** Generación iniciada...\nPrompt ID: {{ $json.body.prompt_id }}",
+        "additionalFields": {
+          "parse_mode": "MarkdownV2"
+        }
+      },
+      "id": "telegram-1",
+      "name": "Telegram (Inicio)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        100
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_bot",
+          "name": "<TU_BOT_TOKEN_AQUI>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "<TU_CHAT_ID>",
+        "text": "=✅ **FIN:** Tarea completada exitosamente.\nPrompt ID: {{ $json.body.prompt_id }}",
+        "additionalFields": {
+          "parse_mode": "MarkdownV2"
+        }
+      },
+      "id": "telegram-2",
+      "name": "Telegram (Fin)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        300
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_bot",
+          "name": "<TU_BOT_TOKEN_AQUI>"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "<TU_CHAT_ID>",
+        "text": "=🚨 **ERROR:** Fallo en el nodo {{ $json.body.nodo_fallido }}...\nPrompt ID: {{ $json.body.prompt_id }}\nMotivo: {{ $json.body.motivo }}",
+        "additionalFields": {
+          "parse_mode": "MarkdownV2"
+        }
+      },
+      "id": "telegram-3",
+      "name": "Telegram (Error)",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.1,
+      "position": [
+        750,
+        500
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "telegram_bot",
+          "name": "<TU_BOT_TOKEN_AQUI>"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Telegram (Inicio)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram (Fin)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram (Error)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
