@@ -1,89 +1,115 @@
 {
-  "name": "ComfyUI Telemetry Alerts",
   "nodes": [
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "comfyui-telemetry",
+        "path": "comfyui-monitor",
         "responseMode": "onReceived",
         "options": {}
       },
       "id": "webhook-1",
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
-      "position": [
-        250,
-        300
-      ],
+      "typeVersion": 1.1,
+      "position": [250, 300],
       "webhookId": "comfyui-telemetry-webhook"
     },
     {
       "parameters": {
         "rules": {
-          "rules": [
+          "values": [
             {
-              "outputKey": "inicio",
               "conditions": {
-                "string": [
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
                   {
-                    "value1": "={{ $json.body.estado }}",
-                    "value2": "inicio"
+                    "leftValue": "={{ $json.body.estado }}",
+                    "rightValue": "inicio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
                   }
-                ]
-              }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Inicio"
             },
             {
-              "outputKey": "fin",
               "conditions": {
-                "string": [
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
                   {
-                    "value1": "={{ $json.body.estado }}",
-                    "value2": "fin"
+                    "leftValue": "={{ $json.body.estado }}",
+                    "rightValue": "fin",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
                   }
-                ]
-              }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Fin"
             },
             {
-              "outputKey": "error",
               "conditions": {
-                "string": [
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
                   {
-                    "value1": "={{ $json.body.estado }}",
-                    "value2": "error"
+                    "leftValue": "={{ $json.body.estado }}",
+                    "rightValue": "error",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
                   }
-                ]
-              }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Error"
             }
           ]
         },
-        "fallbackOutput": 3
+        "options": {}
       },
       "id": "switch-1",
-      "name": "Switch",
+      "name": "Filtro Estado",
       "type": "n8n-nodes-base.switch",
-      "typeVersion": 1,
-      "position": [
-        450,
-        300
-      ]
+      "typeVersion": 3.4,
+      "position": [480, 300]
     },
     {
       "parameters": {
         "chatId": "<TU_CHAT_ID>",
-        "text": "=🚀 **INICIO:** Generación iniciada...\nPrompt ID: {{ $json.body.prompt_id }}",
+        "text": "=🚀 **INICIO:** Generación iniciada...\nPrompt ID: `{{ $json.body.prompt_id }}`",
         "additionalFields": {
-          "parse_mode": "MarkdownV2"
+          "parse_mode": "Markdown"
         }
       },
       "id": "telegram-1",
       "name": "Telegram (Inicio)",
       "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.1,
-      "position": [
-        750,
-        100
-      ],
+      "typeVersion": 1.2,
+      "position": [800, 100],
       "credentials": {
         "telegramApi": {
           "id": "telegram_bot",
@@ -94,19 +120,16 @@
     {
       "parameters": {
         "chatId": "<TU_CHAT_ID>",
-        "text": "=✅ **FIN:** Tarea completada exitosamente.\nPrompt ID: {{ $json.body.prompt_id }}",
+        "text": "=✅ **FIN:** Tarea completada exitosamente.\nPrompt ID: `{{ $json.body.prompt_id }}`",
         "additionalFields": {
-          "parse_mode": "MarkdownV2"
+          "parse_mode": "Markdown"
         }
       },
       "id": "telegram-2",
       "name": "Telegram (Fin)",
       "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.1,
-      "position": [
-        750,
-        300
-      ],
+      "typeVersion": 1.2,
+      "position": [800, 300],
       "credentials": {
         "telegramApi": {
           "id": "telegram_bot",
@@ -117,19 +140,16 @@
     {
       "parameters": {
         "chatId": "<TU_CHAT_ID>",
-        "text": "=🚨 **ERROR:** Fallo en el nodo {{ $json.body.nodo_fallido }}...\nPrompt ID: {{ $json.body.prompt_id }}\nMotivo: {{ $json.body.motivo }}",
+        "text": "=🚨 **ERROR:** Fallo en el nodo `{{ $json.body.nodo_fallido }}`\nPrompt ID: `{{ $json.body.prompt_id }}`\nMotivo: {{ $json.body.motivo }}",
         "additionalFields": {
-          "parse_mode": "MarkdownV2"
+          "parse_mode": "Markdown"
         }
       },
       "id": "telegram-3",
       "name": "Telegram (Error)",
       "type": "n8n-nodes-base.telegram",
-      "typeVersion": 1.1,
-      "position": [
-        750,
-        500
-      ],
+      "typeVersion": 1.2,
+      "position": [800, 500],
       "credentials": {
         "telegramApi": {
           "id": "telegram_bot",
@@ -143,14 +163,14 @@
       "main": [
         [
           {
-            "node": "Switch",
+            "node": "Filtro Estado",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Switch": {
+    "Filtro Estado": {
       "main": [
         [
           {
@@ -175,8 +195,5 @@
         ]
       ]
     }
-  },
-  "settings": {
-    "executionOrder": "v1"
   }
 }
