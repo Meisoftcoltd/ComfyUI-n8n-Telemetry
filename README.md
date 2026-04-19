@@ -17,7 +17,7 @@ It operates completely in the background without needing any nodes on your workf
 1. Navigate to your ComfyUI `custom_nodes` folder.
 2. Clone this repository:
    ```bash
-   git clone https://github.com/your-username/ComfyUI-n8n-Telemetry.git
+   git clone https://github.com/Meisoftcoltd/ComfyUI-n8n-Telemetry.git
    ```
 3. Restart ComfyUI.
 
