@@ -71,7 +71,7 @@ def patch_server(server_instance):
                 payload = {
                     "estado": "error",
                     "prompt_id": data.get("prompt_id"),
-                    "nodo_fallido": data.get("node_id"),
+                    "nodo_fallido": f"{data.get('node_type', 'Desconocido')} (ID: {data.get('node_id', '?')})",
                     "motivo": data.get("exception_message")
                 }
 
