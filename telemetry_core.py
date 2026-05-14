@@ -2,6 +2,9 @@ import json
 import threading
 import urllib.request
 import os
+import logging
+
+logger = logging.getLogger("ComfyUI-n8n-Telemetry")
 
 class TelemetryCore:
     def __init__(self, config_path):
@@ -14,8 +17,8 @@ class TelemetryCore:
                 with open(self.config_path, 'r') as f:
                     config = json.load(f)
                     return config.get('webhook_url', '')
-        except Exception as e:
-            print(f"[ComfyUI-n8n-Telemetry] Error loading config: {e}")
+        except Exception:
+            logger.exception("Error loading config")
         return ''
 
     def update_webhook_url(self, url):
@@ -23,8 +26,8 @@ class TelemetryCore:
         try:
             with open(self.config_path, 'w') as f:
                 json.dump({'webhook_url': url}, f)
-        except Exception as e:
-            print(f"[ComfyUI-n8n-Telemetry] Error saving config: {e}")
+        except Exception:
+            logger.exception("Error saving config")
 
     def send_telemetry(self, payload):
         if not self.webhook_url:
@@ -35,8 +38,8 @@ class TelemetryCore:
                 data = json.dumps(payload).encode('utf-8')
                 req = urllib.request.Request(self.webhook_url, data=data, headers={'Content-Type': 'application/json'}, method='POST')
                 urllib.request.urlopen(req, timeout=2.0)
-            except Exception as e:
-                print(f"[ComfyUI-n8n-Telemetry] Failed to send telemetry: {e}")
+            except Exception:
+                logger.exception("Failed to send telemetry")
 
         thread = threading.Thread(target=_send)
         thread.daemon = True
