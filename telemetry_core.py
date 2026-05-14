@@ -1,7 +1,14 @@
 import json
 import threading
 import urllib.request
+import urllib.parse
 import os
+import ipaddress
+import socket
+
+class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.request.HTTPError(newurl, code, "Redirects are blocked for security reasons", headers, fp)
 
 class TelemetryCore:
     def __init__(self, config_path):
@@ -18,7 +25,44 @@ class TelemetryCore:
             print(f"[ComfyUI-n8n-Telemetry] Error loading config: {e}")
         return ''
 
+    def is_valid_url(self, url):
+        if not url:
+            return False
+        try:
+            parsed = urllib.parse.urlparse(url)
+            if parsed.scheme not in ('http', 'https') or not parsed.netloc:
+                return False
+
+            host = parsed.hostname
+            if not host:
+                return False
+
+            # Simple check for common local hostnames
+            if host.lower() in ('localhost', 'localhost.localdomain'):
+                return False
+
+            try:
+                # Resolve hostname to IP to check for private ranges
+                # Use getaddrinfo to support both IPv4 and IPv6
+                addr_info = socket.getaddrinfo(host, None)
+                for family, kind, proto, canonname, sockaddr in addr_info:
+                    ip_str = sockaddr[0]
+                    ip = ipaddress.ip_address(ip_str)
+                    if ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_multicast:
+                        return False
+            except Exception:
+                # Fail-closed: if we can't resolve it, we block it.
+                return False
+
+            return True
+        except Exception:
+            return False
+
     def update_webhook_url(self, url):
+        if url and not self.is_valid_url(url):
+            print(f"[ComfyUI-n8n-Telemetry] Invalid webhook URL blocked: {url}")
+            return
+
         self.webhook_url = url
         try:
             with open(self.config_path, 'w') as f:
@@ -27,14 +71,15 @@ class TelemetryCore:
             print(f"[ComfyUI-n8n-Telemetry] Error saving config: {e}")
 
     def send_telemetry(self, payload):
-        if not self.webhook_url:
+        if not self.webhook_url or not self.is_valid_url(self.webhook_url):
             return
 
         def _send():
             try:
                 data = json.dumps(payload).encode('utf-8')
                 req = urllib.request.Request(self.webhook_url, data=data, headers={'Content-Type': 'application/json'}, method='POST')
-                urllib.request.urlopen(req, timeout=2.0)
+                opener = urllib.request.build_opener(NoRedirectHandler)
+                opener.open(req, timeout=2.0)
             except Exception as e:
                 print(f"[ComfyUI-n8n-Telemetry] Failed to send telemetry: {e}")
 
