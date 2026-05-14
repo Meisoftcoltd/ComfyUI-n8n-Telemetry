@@ -1,4 +1,5 @@
 import os
+import asyncio
 import server
 from aiohttp import web
 from .telemetry_core import init_telemetry, patch_server
@@ -16,7 +17,7 @@ async def update_config(request):
     try:
         data = await request.json()
         url = data.get("webhook_url", "")
-        telemetry_instance.update_webhook_url(url)
+        await asyncio.to_thread(telemetry_instance.update_webhook_url, url)
         return web.json_response({"status": "success", "webhook_url": url})
     except Exception as e:
         return web.json_response({"status": "error", "message": str(e)}, status=500)
